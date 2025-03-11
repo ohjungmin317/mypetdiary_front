@@ -722,7 +722,7 @@ const saveDiary = async () => {
       petMood: selectedPetMood.value, // 변경: mood -> petMood
       weather: selectedWeather.value,
       email: userEmail.value, // 이메일 추가
-      photoUrl: photoUrl.value // 변경: image -> photoUrl
+      photoUrl: null, // 변경: image -> photoUrl
     };
     
     console.log("저장할 일기 데이터:", newDiary); // 디버깅용 로그
@@ -742,6 +742,7 @@ const saveDiary = async () => {
     if (photoUrl.value) {
       const formData = new FormData();
       formData.append("image", fileInput.value.files[0]);
+      console.log("이미지 데이터:", `${API_URL}/image/${savedDiary.id}`+"'");
       const imageResponse = await axios.post(`${API_URL}/image/${savedDiary.id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
