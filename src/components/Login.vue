@@ -56,12 +56,22 @@ export default {
             password: this.user.password,
           }
         );
+        
+        // 로그인 성공 시 사용자 이메일을 localStorage에 저장
         if (response.data === "Login successful") {
+          // 사용자 이메일 저장
+          localStorage.setItem('userEmail', this.user.email);
+          
+          // 추가: 로그인 상태 저장
+          localStorage.setItem('isLoggedIn', 'true');
+          
+          // 페이지 이동
           this.$router.push({ name: "creatediary" });
         } else {
           this.errorMessage = "이메일 또는 비밀번호가 잘못되었습니다.";
         }
       } catch (error) {
+        console.error("로그인 오류:", error);
         this.errorMessage = "로그인 실패. 다시 시도해주세요.";
       }
     },
