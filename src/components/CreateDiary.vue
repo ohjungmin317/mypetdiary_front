@@ -4,7 +4,9 @@
     <header class="header">
       <h1 class="title">My Pet Diary</h1>
       <div class="header-actions">
-        <button class="logout-text-btn logout-btn" @click="logout">🔓 Logout</button>
+        <button class="logout-text-btn logout-btn" @click="logout">
+          🔓 Logout
+        </button>
         <button class="menu-text-btn menu-btn" @click="toggleMenu">
           📋 Menu
         </button>
@@ -135,7 +137,9 @@
                       <span class="mood-label">{{ mood.label }}</span>
                     </div>
                   </div>
-                  <span v-if="formErrors.petMood" class="error-message">기분을 선택해주세요</span>
+                  <span v-if="formErrors.petMood" class="error-message"
+                    >기분을 선택해주세요</span
+                  >
                 </div>
 
                 <div class="weather-selector">
@@ -152,12 +156,21 @@
                       <span class="weather-label">{{ weather.label }}</span>
                     </div>
                   </div>
-                  <span v-if="formErrors.weather" class="error-message">날씨를 선택해주세요</span>
+                  <span v-if="formErrors.weather" class="error-message"
+                    >날씨를 선택해주세요</span
+                  >
                 </div>
               </div>
 
               <div class="content-section">
-                <label for="content">일기 내용 <span class="character-count" :class="{ 'text-danger': diaryContent.length > 250 }">{{ diaryContent.length }}/250</span></label>
+                <label for="content"
+                  >일기 내용
+                  <span
+                    class="character-count"
+                    :class="{ 'text-danger': diaryContent.length > 250 }"
+                    >{{ diaryContent.length }}/250</span
+                  ></label
+                >
                 <textarea
                   v-model="diaryContent"
                   id="content"
@@ -232,7 +245,9 @@
                   <p class="diary-date">{{ formatDate(diary.createdAt) }}</p>
                 </div>
                 <div class="diary-mood-weather">
-                  <span class="diary-mood">{{ getMoodEmoji(diary.petMood) }}</span>
+                  <span class="diary-mood">{{
+                    getMoodEmoji(diary.petMood)
+                  }}</span>
                   <span class="diary-weather">{{
                     getWeatherEmoji(diary.weather)
                   }}</span>
@@ -319,7 +334,9 @@
                   <span class="mood-label">{{ mood.label }}</span>
                 </div>
               </div>
-              <span v-if="editFormErrors.petMood" class="error-message">기분을 선택해주세요</span>
+              <span v-if="editFormErrors.petMood" class="error-message"
+                >기분을 선택해주세요</span
+              >
             </div>
 
             <div class="weather-selector">
@@ -336,12 +353,26 @@
                   <span class="weather-label">{{ weather.label }}</span>
                 </div>
               </div>
-              <span v-if="editFormErrors.weather" class="error-message">날씨를 선택해주세요</span>
+              <span v-if="editFormErrors.weather" class="error-message"
+                >날씨를 선택해주세요</span
+              >
             </div>
           </div>
 
           <div class="form-group">
-            <label for="edit-content">내용 <span class="character-count" :class="{ 'text-danger': editingDiary.content && editingDiary.content.length > 250 }">{{ editingDiary.content ? editingDiary.content.length : 0 }}/250</span></label>
+            <label for="edit-content"
+              >내용
+              <span
+                class="character-count"
+                :class="{
+                  'text-danger':
+                    editingDiary.content && editingDiary.content.length > 250,
+                }"
+                >{{
+                  editingDiary.content ? editingDiary.content.length : 0
+                }}/250</span
+              ></label
+            >
             <textarea
               id="edit-content"
               v-model="editingDiary.content"
@@ -364,7 +395,12 @@
                 <span class="upload-icon">📷</span>
                 <span>클릭하여 사진 추가</span>
               </div>
-              <img v-else :src="getImageUrl(editingDiary.photoUrl)" class="preview-image" @error="handleEditImageError" />
+              <img
+                v-else
+                :src="getImageUrl(editingDiary.photoUrl)"
+                class="preview-image"
+                @error="handleEditImageError"
+              />
             </div>
             <button
               v-if="editingDiary.photoUrl"
@@ -378,7 +414,14 @@
 
         <div class="edit-modal-actions">
           <div class="edit-modal-footer">
-            <button class="save-btn" @click="saveEdit" :disabled="isSubmitting || (editingDiary.content && editingDiary.content.length > 250)">
+            <button
+              class="save-btn"
+              @click="saveEdit"
+              :disabled="
+                isSubmitting ||
+                (editingDiary.content && editingDiary.content.length > 250)
+              "
+            >
               {{ isSubmitting ? "저장 중..." : "저장" }}
             </button>
             <button class="cancel-btn" @click="cancelEdit">취소</button>
@@ -412,7 +455,7 @@
 <script setup>
 import { ref, computed, onMounted, reactive, watch } from "vue";
 import axios from "axios";
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
 
 // Add router
 const router = useRouter();
@@ -445,14 +488,14 @@ const isLoggedIn = ref(false);
 // 폼 유효성 검사를 위한 에러 상태
 const formErrors = reactive({
   petMood: false, // 변경: mood -> petMood
-  weather: false
+  weather: false,
 });
 
 // 수정 폼 유효성 검사를 위한 에러 상태
 const editFormErrors = reactive({
   petMood: false, // 변경: mood -> petMood
   weather: false,
-  date: false
+  date: false,
 });
 
 // API 기본 URL 설정
@@ -546,37 +589,42 @@ const calendarDates = computed(() => {
   return dates;
 });
 
-// 이미지 URL 처리 함수 추가
+// 이미지 URL 처리 함수 수정 - 문제 해결 1
 const getImageUrl = (url) => {
   if (!url) return null;
-  
-  // 이미 완전한 URL인 경우 (http:// 또는 https://로 시작하는 경우)
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+
+  // 데이터 URL인 경우 (base64 인코딩된 이미지)
+  if (url.startsWith("data:")) {
     return url;
   }
-  
+
+  // 이미 완전한 URL인 경우 (http:// 또는 https://로 시작하는 경우)
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+
   // 상대 경로인 경우 BASE_URL과 결합
-  if (url.startsWith('/')) {
+  if (url.startsWith("/")) {
     return `${IMAGE_URL}${url}`;
   }
-  
+
   // 그 외의 경우 BASE_URL에 / 추가하여 결합
   return `${IMAGE_URL}/${url}`;
 };
 
-// // 이미지 로드 에러 처리 함수 추가
-// const handleImageError = (event, diary) => {
-//   console.error(`이미지 로드 실패: ${diary.photoUrl}`);
-//   // 이미지 로드 실패 시 기본 이미지로 대체
-//   event.target.src = '@/assets/image/placeholder.png';
-// };
+// 이미지 로드 에러 처리 함수 추가
+const handleImageError = (event, diary) => {
+  console.error(`이미지 로드 실패: ${diary.photoUrl}`);
+  // 이미지 로드 실패 시 기본 이미지로 대체
+  event.target.src = require("@/assets/image/default.jfif");
+};
 
-// // 수정 모달 이미지 로드 에러 처리 함수 추가
-// const handleEditImageError = (event) => {
-//   console.error(`수정 모달 이미지 로드 실패: ${editingDiary.value.photoUrl}`);
-//   // 이미지 로드 실패 시 기본 이미지로 대체
-//   event.target.src = '@/assets/image/placeholder.png';
-// };
+// 수정 모달 이미지 로드 에러 처리 함수 추가
+const handleEditImageError = (event) => {
+  console.error(`수정 모달 이미지 로드 실패: ${editingDiary.value.photoUrl}`);
+  // 이미지 로드 실패 시 기본 이미지로 대체
+  event.target.src = require("@/assets/image/default.jfif");
+};
 
 // 메뉴 토글 함수
 const toggleMenu = () => {
@@ -664,12 +712,12 @@ const startWritingDiary = () => {
   selectedDate.value = new Date();
   currentMonth.value = selectedDate.value.getMonth();
   currentYear.value = selectedDate.value.getFullYear();
-  
+
   // 기본값 설정
   selectedPetMood.value = "happy"; // 변경: selectedMood -> selectedPetMood
   selectedWeather.value = "sunny";
   diaryContent.value = ""; // 내용 초기화
-  
+
   // 에러 초기화
   formErrors.petMood = false; // 변경: mood -> petMood
   formErrors.weather = false;
@@ -678,15 +726,16 @@ const startWritingDiary = () => {
 // 폼 유효성 검사
 const validateForm = () => {
   let isValid = true;
-  
+
   // 기분 검사
-  if (!selectedPetMood.value) { // 변경: selectedMood -> selectedPetMood
+  if (!selectedPetMood.value) {
+    // 변경: selectedMood -> selectedPetMood
     formErrors.petMood = true; // 변경: mood -> petMood
     isValid = false;
   } else {
     formErrors.petMood = false; // 변경: mood -> petMood
   }
-  
+
   // 날씨 검사
   if (!selectedWeather.value) {
     formErrors.weather = true;
@@ -694,19 +743,19 @@ const validateForm = () => {
   } else {
     formErrors.weather = false;
   }
-  
+
   // 내용 길이 검사 추가
   if (diaryContent.value.length > 250) {
     isValid = false;
   }
-  
+
   return isValid;
 };
 
 // 수정 폼 유효성 검사
 const validateEditForm = () => {
   let isValid = true;
-  
+
   // 날짜 검사
   if (!editingDiary.value.dateString) {
     editFormErrors.date = true;
@@ -714,15 +763,16 @@ const validateEditForm = () => {
   } else {
     editFormErrors.date = false;
   }
-  
+
   // 기분 검사
-  if (!editingDiary.value.petMood) { // 변경: mood -> petMood
+  if (!editingDiary.value.petMood) {
+    // 변경: mood -> petMood
     editFormErrors.petMood = true; // 변경: mood -> petMood
     isValid = false;
   } else {
     editFormErrors.petMood = false; // 변경: mood -> petMood
   }
-  
+
   // 날씨 검사
   if (!editingDiary.value.weather) {
     editFormErrors.weather = true;
@@ -730,20 +780,20 @@ const validateEditForm = () => {
   } else {
     editFormErrors.weather = false;
   }
-  
+
   // 내용 길이 검사 추가
   if (editingDiary.value.content && editingDiary.value.content.length > 250) {
     isValid = false;
   }
-  
+
   return isValid;
 };
 
 // Add logout function
 const logout = () => {
-  localStorage.removeItem('userEmail');
-  localStorage.removeItem('isLoggedIn');
-  router.push({ name: 'login' });
+  localStorage.removeItem("userEmail");
+  localStorage.removeItem("isLoggedIn");
+  router.push({ name: "login" });
 };
 
 // 일기 저장 함수 - axios 통신 수정
@@ -752,17 +802,17 @@ const saveDiary = async () => {
   if (!validateForm()) {
     return;
   }
-  
+
   // 제출 상태 시작
   isSubmitting.value = true;
-  
+
   try {
     // 날짜 형식 변환 (YYYY-MM-DD 형식으로)
     const year = selectedDate.value.getFullYear();
-    const month = String(selectedDate.value.getMonth() + 1).padStart(2, '0');
-    const day = String(selectedDate.value.getDate()).padStart(2, '0');
+    const month = String(selectedDate.value.getMonth() + 1).padStart(2, "0");
+    const day = String(selectedDate.value.getDate()).padStart(2, "0");
     const formattedDate = `${year}-${month}-${day}`;
-    
+
     // 새 일기 객체 생성 - 백엔드 엔티티와 일치하도록 수정
     const newDiary = {
       title: diaryTitle.value || "무제",
@@ -773,30 +823,34 @@ const saveDiary = async () => {
       email: userEmail.value, // 이메일 추가
       photoUrl: null, // 변경: image -> photoUrl
     };
-    
+
     console.log("저장할 일기 데이터:", newDiary); // 디버깅용 로그
-    
+
     // axios를 사용하여 서버로 일기 데이터 전송
     const response = await axios.post(API_URL, newDiary);
-    
+
     console.log("서버 응답:", response.data); // 디버깅용 로그
 
     // 서버에서 반환한 데이터로 일기 객체 생성
     const savedDiary = {
       ...response.data,
-      createdAt: new Date(response.data.createdAt) // 변경: date -> createdAt
+      createdAt: new Date(response.data.createdAt), // 변경: date -> createdAt
     };
 
     // 이미지가 있는 경우
     if (photoUrl.value) {
       const formData = new FormData();
       formData.append("image", fileInput.value.files[0]);
-      console.log("이미지 데이터:", `${API_URL}/image/${savedDiary.id}`+"'");
-      const imageResponse = await axios.post(`${API_URL}/image/${savedDiary.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      console.log("이미지 데이터:", `${API_URL}/image/${savedDiary.id}` + "'");
+      const imageResponse = await axios.post(
+        `${API_URL}/image/${savedDiary.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       savedDiary.photoUrl = imageResponse.data.photoUrl; // 변경: imageUrl -> photoUrl
     }
 
@@ -830,7 +884,7 @@ const cancelWritingDiary = () => {
   selectedPetMood.value = "happy"; // 변경: selectedMood -> selectedPetMood
   selectedWeather.value = "sunny";
   photoUrl.value = null; // 변경: previewImage -> photoUrl
-  
+
   // 에러 초기화
   formErrors.petMood = false; // 변경: mood -> petMood
   formErrors.weather = false;
@@ -872,14 +926,25 @@ const getWeatherEmoji = (weatherValue) => {
   return weather ? weather.emoji : "";
 };
 
-// 일기 데이터를 가져오기
+// 일기 데이터를 가져오기 - 수정된 부분
 const fetchDiaries = async () => {
   try {
-    const response = await axios.get(API_URL);
+    // 로그인한 사용자의 이메일이 있는지 확인
+    if (!userEmail.value) {
+      console.error("사용자 이메일이 없습니다.");
+      return;
+    }
+
+    // 사용자 이메일을 쿼리 파라미터로 추가하여 해당 사용자의 일기만 가져오기
+    const response = await axios.get(`${API_URL}/${userEmail.value}`);
+
+    console.log("가져온 일기 데이터:", response.data); // 디버깅용 로그
+
     diaries.value = response.data.map((diary) => ({
       ...diary,
-      createdAt: new Date(diary.createdAt) // 변경: date -> createdAt
+      createdAt: new Date(diary.createdAt), // 변경: date -> createdAt
     }));
+
     hasDiaries.value = diaries.value.length > 0;
   } catch (error) {
     console.error("일기 데이터를 가져오는 중 오류 발생:", error);
@@ -890,27 +955,29 @@ const fetchDiaries = async () => {
 // Modify onMounted hook
 onMounted(() => {
   // Check login status
-  const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const loggedIn = localStorage.getItem("isLoggedIn") === "true";
   isLoggedIn.value = loggedIn;
-  
+
   // Redirect to login if not logged in
   if (!loggedIn) {
-    router.push({ name: 'login' });
+    router.push({ name: "login" });
     return;
   }
-  
+
   // Get user email
-  const email = localStorage.getItem('userEmail');
+  const email = localStorage.getItem("userEmail");
   if (email) {
     userEmail.value = email;
+    console.log("로그인한 사용자 이메일:", email); // 디버깅용 로그
+
+    // 사용자 이메일을 가져온 후 일기 데이터 로드
+    fetchDiaries();
   } else {
     // Redirect to login if email not found
-    router.push({ name: 'login' });
+    router.push({ name: "login" });
     return;
   }
-  
-  // Fetch diaries and set up initial state
-  fetchDiaries();
+
   isWritingDiary.value = true;
   selectedPetMood.value = "happy";
   selectedWeather.value = "sunny";
@@ -920,19 +987,20 @@ onMounted(() => {
 const editDiary = (diary) => {
   // 수정할 일기 복사본 생성
   editingDiary.value = JSON.parse(JSON.stringify(diary));
-  
+
   // 날짜 문자열 변환 (input type="date"용)
   const dateObj = new Date(diary.createdAt); // 변경: date -> createdAt
   const year = dateObj.getFullYear();
   const month = String(dateObj.getMonth() + 1).padStart(2, "0");
   const day = String(dateObj.getDate()).padStart(2, "0");
   editingDiary.value.dateString = `${year}-${month}-${day}`;
-  
+
   // 기본값 설정 (값이 없는 경우)
-  if (!editingDiary.value.petMood) { // 변경: mood -> petMood
+  if (!editingDiary.value.petMood) {
+    // 변경: mood -> petMood
     editingDiary.value.petMood = "happy"; // 변경: mood -> petMood
   }
-  
+
   if (!editingDiary.value.weather) {
     editingDiary.value.weather = "sunny";
   }
@@ -942,7 +1010,7 @@ const editDiary = (diary) => {
 
   // 수정 모달 표시
   isEditingDiary.value = true;
-  
+
   // 에러 초기화
   editFormErrors.petMood = false; // 변경: mood -> petMood
   editFormErrors.weather = false;
@@ -954,13 +1022,16 @@ const triggerEditFileInput = () => {
   editFileInput.value.click();
 };
 
-// 수정용 파일 업로드 처리
+// 수정용 파일 업로드 처리 - 문제 해결 2
 const handleEditFileUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      editingDiary.value.photoUrl = e.target.result; // 변경: image -> photoUrl
+      // 데이터 URL로 직접 설정하여 미리보기 표시
+      editingDiary.value.photoUrl = e.target.result;
+      // 파일 객체도 저장 (나중에 FormData에 사용)
+      editingDiary.value.newPhotoFile = file;
     };
     reader.readAsDataURL(file);
   }
@@ -969,6 +1040,7 @@ const handleEditFileUpload = (event) => {
 // 수정용 이미지 제거
 const removeEditImage = () => {
   editingDiary.value.photoUrl = null; // 변경: image -> photoUrl
+  editingDiary.value.newPhotoFile = null; // 파일 객체도 제거
   if (editFileInput.value) {
     editFileInput.value.value = "";
   }
@@ -979,54 +1051,85 @@ const cancelEdit = () => {
   isEditingDiary.value = false;
   editingDiary.value = {};
   editingIndex.value = -1;
-  
+
   // 에러 초기화
   editFormErrors.petMood = false; // 변경: mood -> petMood
   editFormErrors.weather = false;
   editFormErrors.date = false;
 };
 
-// 수정 저장
+// 수정 저장 - 문제 해결 3
 const saveEdit = async () => {
   // 폼 유효성 검사
   if (!validateEditForm()) {
     return;
   }
-  
+
   // 제출 상태 시작
   isSubmitting.value = true;
 
   try {
     // 날짜 문자열을 Date 객체로 변환
-    editingDiary.value.createdAt = editingDiary.value.dateString; // 변경: date -> createdAt
-    
-    console.log("수정할 일기 데이터:", editingDiary.value); // 디버깅용 로그
+    const diaryData = { ...editingDiary.value };
+    diaryData.createdAt = diaryData.dateString;
+
+    // 사용자 이메일 추가 - 수정된 부분
+    diaryData.email = userEmail.value;
+
+    // 새 이미지 파일이 있는지 확인하기 위해 newPhotoFile 속성 제거
+    delete diaryData.newPhotoFile;
+
+    // 데이터 URL 형식의 이미지는 서버로 보내지 않음
+    if (diaryData.photoUrl && diaryData.photoUrl.startsWith("data:")) {
+      // 임시로 photoUrl 제거 (FormData로 별도 전송)
+      delete diaryData.photoUrl;
+    }
+
+    console.log("수정할 일기 데이터:", diaryData); // 디버깅용 로그
 
     // axios를 사용하여 서버로 데이터 전송
     const response = await axios.put(
       `${API_URL}/${editingDiary.value.id}`,
-      editingDiary.value
+      diaryData
     );
-    
+
     console.log("서버 응답:", response.data); // 디버깅용 로그
 
     // 서버에서 반환한 데이터로 일기 객체 업데이트
     const updatedDiary = {
       ...response.data,
-      createdAt: new Date(response.data.createdAt) // 변경: date -> createdAt
+      createdAt: new Date(response.data.createdAt),
     };
 
-    // 이미지가 있는 경우
-    if (editingDiary.value.photoUrl && editFileInput.value.files[0]) {
+    // 새 이미지 파일이 있는 경우에만 이미지 업로드 API 호출
+    if (editingDiary.value.newPhotoFile) {
       const formData = new FormData();
-      formData.append("image", editFileInput.value.files[0]);
-      console.log("이미지 데이터:", `${API_URL}/image/${updatedDiary.id}`);
-      const imageResponse = await axios.post(`${API_URL}/image/${updatedDiary.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      updatedDiary.photoUrl = imageResponse.data.photoUrl; // 변경: imageUrl -> photoUrl
+      formData.append("image", editingDiary.value.newPhotoFile);
+
+      try {
+        const imageResponse = await axios.post(
+          `${API_URL}/image/${updatedDiary.id}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        console.log("이미지 업로드 응답:", imageResponse.data);
+        updatedDiary.photoUrl = imageResponse.data.photoUrl;
+      } catch (imageError) {
+        console.error("이미지 업로드 중 오류:", imageError);
+        // 이미지 업로드 실패해도 일기 업데이트는 유지
+        alert("이미지 업로드 중 오류가 발생했습니다.");
+      }
+    } else if (
+      editingDiary.value.photoUrl &&
+      editingDiary.value.photoUrl.startsWith("data:")
+    ) {
+      // 이미 데이터 URL인 경우 (미리보기에서 보여주기 위해)
+      updatedDiary.photoUrl = editingDiary.value.photoUrl;
     }
 
     // 수정된 일기 저장
