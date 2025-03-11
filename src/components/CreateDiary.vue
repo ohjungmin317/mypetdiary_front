@@ -157,12 +157,13 @@
               </div>
 
               <div class="content-section">
-                <label for="content">일기 내용</label>
+                <label for="content">일기 내용 <span class="character-count" :class="{ 'text-danger': diaryContent.length > 250 }">{{ diaryContent.length }}/250</span></label>
                 <textarea
                   v-model="diaryContent"
                   id="content"
                   placeholder="오늘 반려동물과 함께한 특별한 순간들을 기록해보세요..."
                   class="content-textarea"
+                  maxlength="250"
                 ></textarea>
               </div>
 
@@ -198,7 +199,7 @@
                 <button
                   class="confirm-btn"
                   @click="saveDiary"
-                  :disabled="isSubmitting"
+                  :disabled="isSubmitting || diaryContent.length > 250"
                 >
                   {{ isSubmitting ? "저장 중..." : "저장하기" }}
                 </button>
@@ -244,9 +245,10 @@
                 </p>
                 <div v-if="diary.photoUrl" class="diary-image-container">
                   <img
-                    :src="diary.photoUrl"
+                    :src="getImageUrl(diary.photoUrl)"
                     alt="일기 이미지"
                     class="diary-image"
+                    @error="handleImageError($event, diary)"
                   />
                 </div>
               </div>
@@ -339,11 +341,12 @@
           </div>
 
           <div class="form-group">
-            <label for="edit-content">내용</label>
+            <label for="edit-content">내용 <span class="character-count" :class="{ 'text-danger': editingDiary.content && editingDiary.content.length > 250 }">{{ editingDiary.content ? editingDiary.content.length : 0 }}/250</span></label>
             <textarea
               id="edit-content"
               v-model="editingDiary.content"
               class="edit-textarea"
+              maxlength="250"
             ></textarea>
           </div>
 
@@ -361,7 +364,7 @@
                 <span class="upload-icon">📷</span>
                 <span>클릭하여 사진 추가</span>
               </div>
-              <img v-else :src="editingDiary.photoUrl" class="preview-image" />
+              <img v-else :src="getImageUrl(editingDiary.photoUrl)" class="preview-image" @error="handleEditImageError" />
             </div>
             <button
               v-if="editingDiary.photoUrl"
@@ -375,7 +378,7 @@
 
         <div class="edit-modal-actions">
           <div class="edit-modal-footer">
-            <button class="save-btn" @click="saveEdit" :disabled="isSubmitting">
+            <button class="save-btn" @click="saveEdit" :disabled="isSubmitting || (editingDiary.content && editingDiary.content.length > 250)">
               {{ isSubmitting ? "저장 중..." : "저장" }}
             </button>
             <button class="cancel-btn" @click="cancelEdit">취소</button>
@@ -454,6 +457,9 @@ const editFormErrors = reactive({
 
 // API 기본 URL 설정
 const API_URL = "http://localhost:5173/api/diaries/creatediary";
+// 이미지 기본 URL 설정 (서버 URL)
+const BASE_URL = "http://localhost:5173";
+const IMAGE_URL = "http://localhost:8080";
 
 const diaries = ref([]); // 초기 일기 목록을 빈 배열로 설정
 
@@ -539,6 +545,38 @@ const calendarDates = computed(() => {
 
   return dates;
 });
+
+// 이미지 URL 처리 함수 추가
+const getImageUrl = (url) => {
+  if (!url) return null;
+  
+  // 이미 완전한 URL인 경우 (http:// 또는 https://로 시작하는 경우)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // 상대 경로인 경우 BASE_URL과 결합
+  if (url.startsWith('/')) {
+    return `${IMAGE_URL}${url}`;
+  }
+  
+  // 그 외의 경우 BASE_URL에 / 추가하여 결합
+  return `${IMAGE_URL}/${url}`;
+};
+
+// // 이미지 로드 에러 처리 함수 추가
+// const handleImageError = (event, diary) => {
+//   console.error(`이미지 로드 실패: ${diary.photoUrl}`);
+//   // 이미지 로드 실패 시 기본 이미지로 대체
+//   event.target.src = '@/assets/image/placeholder.png';
+// };
+
+// // 수정 모달 이미지 로드 에러 처리 함수 추가
+// const handleEditImageError = (event) => {
+//   console.error(`수정 모달 이미지 로드 실패: ${editingDiary.value.photoUrl}`);
+//   // 이미지 로드 실패 시 기본 이미지로 대체
+//   event.target.src = '@/assets/image/placeholder.png';
+// };
 
 // 메뉴 토글 함수
 const toggleMenu = () => {
@@ -630,6 +668,7 @@ const startWritingDiary = () => {
   // 기본값 설정
   selectedPetMood.value = "happy"; // 변경: selectedMood -> selectedPetMood
   selectedWeather.value = "sunny";
+  diaryContent.value = ""; // 내용 초기화
   
   // 에러 초기화
   formErrors.petMood = false; // 변경: mood -> petMood
@@ -654,6 +693,11 @@ const validateForm = () => {
     isValid = false;
   } else {
     formErrors.weather = false;
+  }
+  
+  // 내용 길이 검사 추가
+  if (diaryContent.value.length > 250) {
+    isValid = false;
   }
   
   return isValid;
@@ -685,6 +729,11 @@ const validateEditForm = () => {
     isValid = false;
   } else {
     editFormErrors.weather = false;
+  }
+  
+  // 내용 길이 검사 추가
+  if (editingDiary.value.content && editingDiary.value.content.length > 250) {
+    isValid = false;
   }
   
   return isValid;
@@ -966,6 +1015,19 @@ const saveEdit = async () => {
       ...response.data,
       createdAt: new Date(response.data.createdAt) // 변경: date -> createdAt
     };
+
+    // 이미지가 있는 경우
+    if (editingDiary.value.photoUrl && editFileInput.value.files[0]) {
+      const formData = new FormData();
+      formData.append("image", editFileInput.value.files[0]);
+      console.log("이미지 데이터:", `${API_URL}/image/${updatedDiary.id}`);
+      const imageResponse = await axios.post(`${API_URL}/image/${updatedDiary.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      updatedDiary.photoUrl = imageResponse.data.photoUrl; // 변경: imageUrl -> photoUrl
+    }
 
     // 수정된 일기 저장
     if (editingIndex.value !== -1) {
@@ -1516,6 +1578,18 @@ const deleteDiary = async () => {
 .content-section label {
   font-size: 1rem;
   color: #555;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.character-count {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.text-danger {
+  color: #ff6b6b;
 }
 
 .content-textarea {
@@ -1867,6 +1941,9 @@ const deleteDiary = async () => {
 .form-group label {
   font-size: 0.95rem;
   color: #555;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .edit-input {
