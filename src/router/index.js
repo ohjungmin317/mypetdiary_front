@@ -17,8 +17,8 @@ const router = createRouter({
       component: Register,
     },
     {
-      path: "/creatediary", // Register 페이지 경로
-      name: "creatediary", // 이 부분이 'Register'가 아니라 'register'로 되어 있어야 해.
+      path: "/creatediary", // creatediary 페이지 경로
+      name: "creatediary", //
       component: CreateDiary,
     },
   ],
