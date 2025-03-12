@@ -15,10 +15,21 @@
 
     <!-- 투명 메뉴바 -->
     <div class="transparent-menu" v-if="showMenu">
-      <h3 class="transparent-menu-title">나만의 일기</h3>
-      <div class="transparent-menu-item">
-        <span class="menu-icon">📔</span> 일기장
-      </div>
+      <h3 class="transparent-menu-title">반려동물 관리</h3>
+      <ul class="transparent-menu-list">
+        <li class="transparent-menu-item">
+          <span class="menu-icon">🌭</span> 식단표
+        </li>
+        <li class="transparent-menu-item">
+          <span class="menu-icon">💉</span> 병원 일지
+        </li>
+        <li class="transparent-menu-item">
+          <span class="menu-icon">📝</span> 가계부
+        </li>
+        <li class="transparent-menu-item">
+          <span class="menu-icon">📊</span> 보험
+        </li>
+      </ul>
     </div>
 
     <!-- 메인 콘텐츠 -->
@@ -51,10 +62,18 @@
           >
             <span class="menu-icon">✏️</span> 일기 작성
           </li>
-          <li class="menu-item hover-effect">
+          <li
+            class="menu-item hover-effect"
+            :class="{ active: currentView === 'profile' }"
+            @click="currentView = 'profile'"
+          >
             <span class="menu-icon">👤</span> 프로필 설정
           </li>
-          <li class="menu-item hover-effect">
+          <li
+            class="menu-item hover-effect"
+            :class="{ active: currentView === 'withdrawal' }"
+            @click="showWithdrawalConfirm = true"
+          >
             <span class="menu-icon">❌</span> 회원 탈퇴
           </li>
         </ul>
@@ -64,7 +83,9 @@
       <main class="main-content">
         <!-- 일기 작성 뷰 -->
         <div v-if="currentView === 'write'">
-          <h2 class="section-title">반려동물의 이야기를 작성해주세요.</h2>
+          <h2 class="section-title">
+            당신과 반려동물의 이야기를 작성해주세요.
+          </h2>
 
           <!-- 일기 작성 폼 표시 -->
           <div v-if="isWritingDiary" class="diary-form-container">
@@ -287,6 +308,79 @@
             </button>
           </div>
         </div>
+
+        <!-- 프로필 설정 뷰 -->
+        <div v-else-if="currentView === 'profile'" class="profile-settings">
+          <h2 class="section-title">프로필 설정</h2>
+
+          <div class="profile-form">
+            <div class="profile-image-section">
+              <div class="profile-image-container">
+                <img
+                  v-if="profileImage"
+                  :src="profileImage"
+                  alt="프로필 이미지"
+                  class="profile-image-preview"
+                />
+                <div v-else class="profile-image-placeholder">
+                  <span class="profile-image-icon">👤</span>
+                </div>
+              </div>
+              <div class="profile-image-actions">
+                <button class="upload-image-btn" @click="triggerProfileFileInput">
+                  이미지 변경
+                </button>
+                <input
+                  type="file"
+                  ref="profileFileInput"
+                  accept="image/*"
+                  style="display: none"
+                  @change="handleProfileFileUpload"
+                />
+                <button
+                  v-if="profileImage"
+                  class="remove-image-btn"
+                  @click="removeProfileImage"
+                >
+                  이미지 삭제
+                </button>
+              </div>
+            </div>
+
+            <div class="profile-form-group">
+              <label for="profile-name">이름</label>
+              <input
+                type="text"
+                id="profile-name"
+                v-model="profileName"
+                placeholder="이름을 입력하세요"
+                class="profile-input"
+              />
+            </div>
+
+            <div class="profile-form-group">
+              <label for="profile-bio">소개</label>
+              <textarea
+                id="profile-bio"
+                v-model="profileBio"
+                placeholder="자신을 소개해주세요"
+                class="profile-textarea"
+                maxlength="200"
+              ></textarea>
+              <span class="character-count">{{ profileBio.length }}/200</span>
+            </div>
+
+            <div class="profile-form-actions">
+              <button
+                class="save-profile-btn"
+                @click="updateProfile"
+                :disabled="isUpdatingProfile"
+              >
+                {{ isUpdatingProfile ? "저장 중..." : "저장하기" }}
+              </button>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
 
@@ -449,6 +543,82 @@
         </div>
       </div>
     </div>
+
+    <!-- 회원 탈퇴 확인 모달 -->
+    <div v-if="showWithdrawalConfirm" class="withdrawal-modal-overlay">
+      <div class="withdrawal-modal">
+        <div class="withdrawal-modal-header">
+          <h3>회원 탈퇴</h3>
+          <button class="close-btn" @click="cancelWithdrawal">×</button>
+        </div>
+
+        <div class="withdrawal-modal-content">
+          <p class="withdrawal-warning">
+            <span class="warning-icon">⚠️</span>
+            회원 탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
+          </p>
+
+          <div class="withdrawal-form-group">
+            <label for="withdrawal-password">비밀번호 확인</label>
+            <input
+              type="password"
+              id="withdrawal-password"
+              v-model="withdrawalPassword"
+              placeholder="비밀번호를 입력하세요"
+              class="withdrawal-input"
+            />
+          </div>
+
+          <div class="withdrawal-form-group">
+            <label>탈퇴 이유</label>
+            <div class="withdrawal-reasons">
+              <div
+                v-for="reason in withdrawalReasons"
+                :key="reason.id"
+                class="withdrawal-reason-option"
+              >
+                <input
+                  type="radio"
+                  :id="`reason-${reason.id}`"
+                  :value="reason.id"
+                  v-model="selectedWithdrawalReason"
+                  class="withdrawal-radio"
+                />
+                <label :for="`reason-${reason.id}`" class="withdrawal-radio-label">
+                  {{ reason.text }}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="selectedWithdrawalReason === 5" class="withdrawal-form-group">
+            <label for="other-reason">기타 이유</label>
+            <textarea
+              id="other-reason"
+              v-model="otherWithdrawalReason"
+              placeholder="탈퇴 이유를 입력해주세요"
+              class="withdrawal-textarea"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="withdrawal-modal-actions">
+          <button
+            class="withdrawal-cancel-btn"
+            @click="cancelWithdrawal"
+          >
+            취소
+          </button>
+          <button
+            class="withdrawal-confirm-btn"
+            @click="processWithdrawal"
+            :disabled="isSubmitting"
+          >
+            {{ isSubmitting ? "처리 중..." : "탈퇴하기" }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -478,6 +648,27 @@ const showDeleteConfirm = ref(false);
 const diaryToDelete = ref(null);
 const isLoading = ref(false); // 로딩 상태 추가
 const isSubmitting = ref(false); // 제출 상태 추가
+
+// 프로필 설정 관련 상태
+const profileName = ref("");
+const profileBio = ref("");
+const profileImage = ref(null);
+const profileFileInput = ref(null);
+const isUpdatingProfile = ref(false);
+
+// 회원 탈퇴 관련 상태
+const showWithdrawalConfirm = ref(false);
+const withdrawalPassword = ref("");
+const withdrawalReason = ref("");
+const withdrawalReasons = [
+  { id: 1, text: "서비스가 마음에 들지 않아요" },
+  { id: 2, text: "더 이상 필요하지 않아요" },
+  { id: 3, text: "다른 서비스를 이용할 예정이에요" },
+  { id: 4, text: "개인정보 보호를 위해 탈퇴할게요" },
+  { id: 5, text: "기타" }
+];
+const selectedWithdrawalReason = ref(0);
+const otherWithdrawalReason = ref("");
 
 // Modify userEmail to be reactive and initially empty
 const userEmail = ref("");
@@ -796,6 +987,98 @@ const logout = () => {
   router.push({ name: "login" });
 };
 
+// 프로필 이미지 업로드 트리거
+const triggerProfileFileInput = () => {
+  profileFileInput.value.click();
+};
+
+// 프로필 이미지 업로드 처리
+const handleProfileFileUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      profileImage.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+// 프로필 이미지 제거
+const removeProfileImage = () => {
+  profileImage.value = null;
+  if (profileFileInput.value) {
+    profileFileInput.value.value = "";
+  }
+};
+
+// 프로필 업데이트
+const updateProfile = async () => {
+  isUpdatingProfile.value = true;
+
+  try {
+    // 실제 API 호출 대신 로컬 스토리지에 저장 (데모용)
+    localStorage.setItem("userName", profileName.value);
+    localStorage.setItem("userBio", profileBio.value);
+    if (profileImage.value) {
+      localStorage.setItem("profileImage", profileImage.value);
+    }
+
+    // 성공 메시지 표시
+    alert("프로필이 성공적으로 업데이트되었습니다.");
+  } catch (error) {
+    console.error("프로필 업데이트 중 오류 발생:", error);
+    alert("프로필 업데이트 중 오류가 발생했습니다.");
+  } finally {
+    isUpdatingProfile.value = false;
+  }
+};
+
+// 회원 탈퇴 취소
+const cancelWithdrawal = () => {
+  showWithdrawalConfirm.value = false;
+  withdrawalPassword.value = "";
+  selectedWithdrawalReason.value = 0;
+  otherWithdrawalReason.value = "";
+};
+
+// 회원 탈퇴 처리
+const processWithdrawal = async () => {
+  if (!withdrawalPassword.value) {
+    alert("비밀번호를 입력해주세요.");
+    return;
+  }
+
+  if (selectedWithdrawalReason.value === 0) {
+    alert("탈퇴 이유를 선택해주세요.");
+    return;
+  }
+
+  if (selectedWithdrawalReason.value === 5 && !otherWithdrawalReason.value) {
+    alert("기타 이유를 입력해주세요.");
+    return;
+  }
+
+  isSubmitting.value = true;
+
+  try {
+    // 실제 API 호출 대신 로컬 스토리지 초기화 (데모용)
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userBio");
+    localStorage.removeItem("profileImage");
+
+    // 로그인 페이지로 이동
+    router.push({ name: "login" });
+  } catch (error) {
+    console.error("회원 탈퇴 중 오류 발생:", error);
+    alert("회원 탈퇴 중 오류가 발생했습니다.");
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
 // 일기 저장 함수 - axios 통신 수정
 const saveDiary = async () => {
   // 폼 유효성 검사
@@ -976,6 +1259,14 @@ onMounted(() => {
     // Redirect to login if email not found
     router.push({ name: "login" });
     return;
+  }
+
+  // 프로필 정보 초기화
+  profileName.value = localStorage.getItem("userName") || "";
+  profileBio.value = localStorage.getItem("userBio") || "";
+  const savedProfileImage = localStorage.getItem("profileImage");
+  if (savedProfileImage) {
+    profileImage.value = savedProfileImage;
   }
 
   isWritingDiary.value = true;
@@ -2273,6 +2564,342 @@ const deleteDiary = async () => {
     left: 20px;
     right: 20px;
     text-align: center;
+  }
+}
+
+/* 프로필 설정 스타일 */
+.profile-settings {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.profile-form {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.profile-image-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-image-container {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e0e0e0;
+}
+
+.profile-image-icon {
+  font-size: 4rem;
+  color: #999;
+}
+
+.profile-image-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.upload-image-btn {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.upload-image-btn:hover {
+  background-color: #357ab7;
+}
+
+.profile-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.profile-form-group label {
+  font-size: 1rem;
+  color: #555;
+}
+
+.profile-input {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.profile-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.profile-textarea {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-height: 120px;
+  resize: vertical;
+  transition: border-color 0.3s;
+  font-family: inherit;
+}
+
+.profile-textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.profile-form-group .character-count {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.75rem;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.profile-form-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.save-profile-btn {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-profile-btn:hover {
+  background-color: #357ab7;
+}
+
+.save-profile-btn:disabled {
+  background-color: #a0c4e8;
+  cursor: not-allowed;
+}
+
+/* 회원 탈퇴 모달 스타일 */
+.withdrawal-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.withdrawal-modal {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.withdrawal-modal-header {
+  padding: 1.25rem;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.withdrawal-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.withdrawal-modal-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.withdrawal-warning {
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
+  padding: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #e65100;
+  font-size: 0.95rem;
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+}
+
+.withdrawal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.withdrawal-form-group label {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.withdrawal-input {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.withdrawal-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.withdrawal-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.withdrawal-reason-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.withdrawal-radio {
+  margin: 0;
+}
+
+.withdrawal-radio-label {
+  font-size: 0.95rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.withdrawal-textarea {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-height: 80px;
+  resize: vertical;
+  transition: border-color 0.3s;
+  font-family: inherit;
+}
+
+.withdrawal-textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.withdrawal-modal-actions {
+  padding: 1.25rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.withdrawal-cancel-btn,
+.withdrawal-confirm-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.withdrawal-cancel-btn {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.withdrawal-cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.withdrawal-confirm-btn {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.withdrawal-confirm-btn:hover {
+  background-color: #e74c3c;
+}
+
+.withdrawal-confirm-btn:disabled {
+  background-color: #ffb3b3;
+  cursor: not-allowed;
+}
+
+/* 반응형 스타일 추가 */
+@media (max-width: 768px) {
+  .profile-form {
+    padding: 1.5rem;
+  }
+
+  .profile-image-section {
+    margin-bottom: 0.5rem;
+  }
+
+  .profile-image-container {
+    width: 120px;
+    height: 120px;
+  }
+
+  .withdrawal-modal {
+    width: 95%;
   }
 }
 </style>
